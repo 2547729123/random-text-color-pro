@@ -328,13 +328,13 @@ add_action('wp_footer', function(){
     if ($max_para < 1) $max_para = 1;
     if ($max_para > 20) $max_para = 20;
 
-    // PRO 功能设置
-    $enable_pro_bold = get_option('rbtc_pro_enable_bold_optimized_color');
-    $pro_template = get_option('rbtc_pro_heading_gradient_template', 'classic_rainbow');
-    $enable_3d_rotate = get_option('rbtc_pro_enable_3d_rotate');
-    $enable_fluid_text = get_option('rbtc_pro_enable_fluid_text');
-    $enable_particles = get_option('rbtc_pro_enable_particles_mouse');
-    $enable_gsap_anime = get_option('rbtc_pro_enable_gsap_anime');
+    // PRO 功能默认关闭
+    $enable_pro_bold = false;
+    $pro_template = 'classic_rainbow';
+    $enable_3d_rotate = false;
+    $enable_fluid_text = false;
+    $enable_particles = false;
+    $enable_gsap_anime = false;
 
     // PRO 小标题独家渐变模板
     $pro_gradients = [
@@ -343,13 +343,30 @@ add_action('wp_footer', function(){
         'ocean_blue' => ['#0077BE','#00BFFF','#1E90FF','#00CED1','#20B2AA'],
         'plasma_flux' => ['#FF00FF','#8A2BE2','#00FFFF','#7FFF00','#FF4500'],
     ];
-    $pro_gradient_colors = isset($pro_gradients[$pro_template]) ? $pro_gradients[$pro_template] : $pro_gradients['classic_rainbow'];
-    $pro_gradient_colors_js = json_encode($pro_gradient_colors);
-    $free_gradient_colors_js = json_encode($gradient_array);
 
-    // 输出样式
+    $pro_gradient_colors = $pro_gradients['classic_rainbow'];
+    $free_gradient_colors_js = json_encode($gradient_array);
+    $pro_gradient_colors_js = json_encode($pro_gradient_colors);
+
+    // 全局授权锁判断，未授权时禁止PRO功能
+    if (function_exists('my_plugin_check_pro_license') && my_plugin_check_pro_license()) {
+        // 授权通过，加载PRO配置
+        $enable_pro_bold = get_option('rbtc_pro_enable_bold_optimized_color');
+        $pro_template = get_option('rbtc_pro_heading_gradient_template', 'classic_rainbow');
+        $enable_3d_rotate = get_option('rbtc_pro_enable_3d_rotate');
+        $enable_fluid_text = get_option('rbtc_pro_enable_fluid_text');
+        $enable_particles = get_option('rbtc_pro_enable_particles_mouse');
+        $enable_gsap_anime = get_option('rbtc_pro_enable_gsap_anime');
+
+        if (isset($pro_gradients[$pro_template])) {
+            $pro_gradient_colors = $pro_gradients[$pro_template];
+            $pro_gradient_colors_js = json_encode($pro_gradient_colors);
+        }
+    }
+
+    // 输出样式部分
     echo "<style>";
-    // 深色模式
+    // 深色模式样式（免费功能）
     if ($enable_dark) {
         echo "@media (prefers-color-scheme: dark) {
             .entry-content, .post-content, .article-content, article { color: #e0e0e0 !important; }
@@ -358,6 +375,7 @@ add_action('wp_footer', function(){
             strong, b { color: #ffcc00 !important; }
         }";
     }
+
     // 渐变标题基础样式
     echo ".rainbow-gradient-text {
         background-clip: text; -webkit-background-clip: text;
@@ -365,7 +383,7 @@ add_action('wp_footer', function(){
         font-weight: bold; display: inline;
     }";
 
-    // 3D旋转效果基础样式
+    // PRO 3D旋转效果样式
     if ($enable_3d_rotate) {
         echo ".rbtc-3d-rotate {
             display: inline-block;
@@ -379,7 +397,7 @@ add_action('wp_footer', function(){
         }";
     }
 
-    // 发光描边效果
+    // PRO 流体发光描边效果
     if ($enable_fluid_text) {
         echo ".rbtc-fluid-glow {
             position: relative;
@@ -411,12 +429,12 @@ add_action('wp_footer', function(){
     }
     echo "</style>";
 
-    // 输出canvas用于粒子（鼠标粒子效果）
+    // PRO 粒子画布
     if ($enable_particles) {
         echo '<canvas id="rbtc-particles-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999999;"></canvas>';
     }
 
-    // 输出JS
+    // 输出JS部分
     ?>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -432,7 +450,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const freeGradientColors = <?php echo $free_gradient_colors_js; ?>;
     const proGradientColors = <?php echo $pro_gradient_colors_js; ?>;
 
-    // Helper: 随机颜色函数
     function getRandomColor() {
         function rand(min=0,max=255){return Math.floor(Math.random()*(max-min+1))+min;}
         let r,g,b,brightness;
@@ -443,17 +460,17 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isDarkMode && brightness < 200) continue;
             break;
         } while(true);
-        return rgb(${r},${g},${b});
+        return `rgb(${r},${g},${b})`;
     }
 
-    // 免费功能：加粗文字随机色
+    // 免费功能：加粗随机色
     <?php if ($enable_bold): ?>
     bolds.forEach(el => {
         el.style.color = getRandomColor();
     });
     <?php endif; ?>
 
-    // PRO 功能：加粗文字智能优化色（覆盖免费随机色）
+    // PRO 功能：加粗智能优化色（覆盖免费）
     <?php if ($enable_pro_bold): ?>
     bolds.forEach(el => {
         function getOptimizedColor() {
@@ -464,7 +481,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 b=Math.floor(Math.random()*256);
                 brightness = r+g+b;
             } while (brightness > 700 || brightness < 100);
-            return rgb(${r},${g},${b});
+            return `rgb(${r},${g},${b})`;
         }
         el.style.color = getOptimizedColor();
     });
@@ -475,17 +492,17 @@ document.addEventListener('DOMContentLoaded', function () {
     headings.forEach((el,i) => {
         const c1 = freeGradientColors[i % freeGradientColors.length];
         const c2 = freeGradientColors[(i+1) % freeGradientColors.length];
-        el.style.backgroundImage = linear-gradient(to right, ${c1}, ${c2});
+        el.style.backgroundImage = `linear-gradient(to right, ${c1}, ${c2})`;
         el.style.backgroundSize = '100% 100%';
         el.classList.add('rainbow-gradient-text');
     });
     <?php endif; ?>
 
-    // PRO 小标题独家渐变模板（覆盖免费渐变）
+    // PRO 小标题独家渐变模板（覆盖免费）
     headings.forEach((el,i) => {
         const c1 = proGradientColors[i % proGradientColors.length];
         const c2 = proGradientColors[(i+1) % proGradientColors.length];
-        el.style.backgroundImage = linear-gradient(to right, ${c1}, ${c2});
+        el.style.backgroundImage = `linear-gradient(to right, ${c1}, ${c2})`;
         el.style.backgroundSize = '100% 100%';
         el.style.webkitBackgroundClip = 'text';
         el.style.webkitTextFillColor = 'transparent';
@@ -538,7 +555,7 @@ document.addEventListener('DOMContentLoaded', function () {
             this.x = x;
             this.y = y;
             this.radius = randomFloat(1,4);
-            this.color = hsl(${randomInt(0,360)}, 100%, 70%);
+            this.color = `hsl(${randomInt(0,360)}, 100%, 70%)`;
             this.vx = randomFloat(-1,1);
             this.vy = randomFloat(-1,1);
             this.life = 100;
@@ -582,7 +599,7 @@ document.addEventListener('DOMContentLoaded', function () {
     })();
     <?php endif; ?>
 
-    // PRO GSAP/Anime.js 动画示例（简易示范）
+    // PRO GSAP/Anime.js 动画示范
     <?php if ($enable_gsap_anime): ?>
     if (typeof gsap !== 'undefined') {
         headings.forEach(el => {
