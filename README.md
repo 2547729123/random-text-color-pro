@@ -1,6 +1,6 @@
 # Random Text Color – 随机彩色文字 PRO版
 
-![Banner](https://raw.githubusercontent.com/2547729123/random-text-color-pro/main/assets/banner-772x250.png)
+![1](https://github.com/user-attachments/assets/3b30d5f5-db2c-40e6-9977-2f2ebc63c21c)
 
 ## 插件简介
 
@@ -25,6 +25,8 @@
   - 段落随机颜色  
   - 深色模式自动适配  
   - 自定义渐变色配置
+ 
+  ![2](https://github.com/user-attachments/assets/2c3b8fb5-e14f-4f95-be1a-913b1d7ea93c)
 
 - **PRO功能（需授权解锁）：**  
   - 加粗文字智能优化色彩  
@@ -36,7 +38,7 @@
   - 段落动态渐变色  
   - 滚动视差与呼吸律动动画  
   - 自定义 CSS 选择器支持
-
+![3](https://github.com/user-attachments/assets/d8d1f24b-597e-41ed-8d86-6b95d3d3d3ed)
 ---
 
 ## 安装说明
